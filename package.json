@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc"
   },
   "author": "Danny Rottstegge",
   "license": "ISC",
@@ -14,7 +14,8 @@
     "@types/uuid": "^8.0.0",
     "pouchdb-core": "^7.2.1",
     "pouchdb-find": "^7.2.1",
-    "prettier": "^2.0.5"
+    "prettier": "^2.0.5",
+    "typescript": "^3.9.5"
   },
   "dependencies": {
     "uuid": "^8.1.0"
