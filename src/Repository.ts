@@ -23,6 +23,22 @@ export class Repository<T extends Entity> {
     ) {
         this.table = table;
         this.db = new PouchDB(options.db.name, options.db);
+        this.db
+            .changes({
+                since: 'now',
+                live: true,
+                filter: (doc) => {
+                    return doc.$table === this.table;
+                },
+            })
+            .on('change', async (change) => {
+                const entity = await this.get(change.id);
+                if (entity) {
+                    this.changeListeners.forEach((listener) => {
+                        listener(entity);
+                    });
+                }
+            });
     }
 
     async save(item: T): Promise<T> {
@@ -88,22 +104,6 @@ export class Repository<T extends Entity> {
 
     public onChange(handler: OnRepositoryChange<T>) {
         this.changeListeners.push(handler);
-        this.db
-            .changes({
-                since: 'now',
-                live: true,
-                filter: (doc) => {
-                    return doc.$table === this.table;
-                },
-            })
-            .on('change', async (change) => {
-                const entity = await this.get(change.id);
-                if (entity) {
-                    this.changeListeners.forEach((listener) => {
-                        listener(entity);
-                    });
-                }
-            });
     }
 
     public removeOnChangeListener(handler: OnRepositoryChange<T>) {
