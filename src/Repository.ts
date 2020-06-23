@@ -1,4 +1,4 @@
-import PouchDB from 'pouchdb-core';
+import PouchDB from 'pouchdb-node';
 import PouchFind from 'pouchdb-find';
 import { v4 as uuidv4 } from 'uuid';
 
