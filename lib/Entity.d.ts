@@ -1,5 +1,5 @@
 export interface Entity {
-    $table: string;
+    $table?: string;
     _id?: string;
     _rev?: string;
     _deleted?: boolean;
