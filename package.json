@@ -1,0 +1,22 @@
+{
+  "name": "pouchdb-repository",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Danny Rottstegge",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/pouchdb-core": "^7.0.6",
+    "@types/pouchdb-find": "^6.3.5",
+    "@types/uuid": "^8.0.0",
+    "pouchdb-core": "^7.2.1",
+    "pouchdb-find": "^7.2.1",
+    "prettier": "^2.0.5"
+  },
+  "dependencies": {
+    "uuid": "^8.1.0"
+  }
+}
