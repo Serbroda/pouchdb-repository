@@ -6,10 +6,7 @@ PouchDB.plugin(PouchFind);
 
 import { Entity } from './Entity';
 
-export interface RepositoryOptions {
-    db: PouchDB.Configuration.LocalDatabaseConfiguration;
-    deletedFlag?: boolean;
-}
+export interface RepositoryOptions extends PouchDB.Configuration.LocalDatabaseConfiguration {}
 
 export type OnRepositoryChange<T> = { (data: T): void };
 
@@ -19,16 +16,16 @@ export class Repository<T extends Entity> {
 
     constructor(
         private readonly name: string,
-        private readonly options: RepositoryOptions = { db: { name: 'db', auto_compaction: true }, deletedFlag: true }
+        private readonly options: RepositoryOptions = {
+            prefix: './db/',
+            auto_compaction: true,
+        }
     ) {
-        this.db = new PouchDB(options.db.name, options.db);
+        this.db = new PouchDB(options.name || name, options);
         this.db
             .changes({
                 since: 'now',
                 live: true,
-                filter: (doc) => {
-                    return doc.$table === this.name;
-                },
             })
             .on('change', async (change) => {
                 const entity = await this.get(change.id);
@@ -47,7 +44,6 @@ export class Repository<T extends Entity> {
             item.created = now;
         }
         item.lastModified = now;
-        item = { ...item, $table: this.name };
 
         const doc = await this.db.put(item);
         item._id = doc.id;
@@ -78,15 +74,10 @@ export class Repository<T extends Entity> {
             return;
         }
 
-        if (this.options.deletedFlag) {
-            const entity = await this.get(id);
-            if (entity) {
-                entity._deleted = true;
-                await this.save(entity);
-            }
-        } else {
-            const doc = await this.db.get(id);
-            await this.db.remove(doc._id, doc._rev);
+        const entity = await this.get(id);
+        if (entity) {
+            entity._deleted = true;
+            await this.save(entity);
         }
     }
 
@@ -96,16 +87,13 @@ export class Repository<T extends Entity> {
         }
     }
 
-    public async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.name } }): Promise<T[]> {
-        if (options.selector && !options.selector.$table) {
-            options.selector = { ...options.selector, ...{ $table: this.name } };
-        }
+    public async query(options: PouchDB.Find.FindRequest<T> = { selector: {} }): Promise<T[]> {
         const docs = await this.db.find(options);
         return docs.docs as T[];
     }
 
     public async clear(): Promise<void> {
-        await this.removeAll(await this.query({ selector: { $table: this.name } }));
+        await this.removeAll(await this.query());
     }
 
     public onChange(handler: OnRepositoryChange<T>) {

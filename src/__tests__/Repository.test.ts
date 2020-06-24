@@ -109,21 +109,6 @@ it('should remove entity', async () => {
     await repo.remove(entity2._id!);
     results = await repo.query();
     expect(results.length).toBe(2);
-
-    class TestEntityRepositoryWithNonDeletedFlag extends Repository<ITestEntity> {
-        constructor() {
-            super('test', {
-                db: { name: 'db' },
-                deletedFlag: false,
-            });
-        }
-    }
-
-    const repo2 = new TestEntityRepositoryWithNonDeletedFlag();
-
-    await repo2.remove({ _id: entity3._id });
-    results = await repo2.query();
-    expect(results.length).toBe(1);
 });
 
 it('should remove all given entities', async () => {
