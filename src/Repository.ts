@@ -41,7 +41,7 @@ export class Repository<T extends Entity> {
             });
     }
 
-    async save(item: T): Promise<T> {
+    public async save(item: T): Promise<T> {
         const now = new Date();
         if (this._isNew(item)) {
             item._id = uuidv4();
@@ -56,7 +56,7 @@ export class Repository<T extends Entity> {
         return item;
     }
 
-    async saveAll(items: T[]): Promise<T[]> {
+    public async saveAll(items: T[]): Promise<T[]> {
         let results: T[] = [];
         items.forEach(async (i) => {
             results.push(await this.save(i));
@@ -64,7 +64,7 @@ export class Repository<T extends Entity> {
         return results;
     }
 
-    async get(id: string, options: PouchDB.Core.GetOptions = {}): Promise<T | undefined> {
+    public async get(id: string, options: PouchDB.Core.GetOptions = {}): Promise<T | undefined> {
         try {
             // TODO: Get with table name
             return await this.db.get(id, options);
@@ -73,7 +73,7 @@ export class Repository<T extends Entity> {
         }
     }
 
-    async remove(item: string | T): Promise<void> {
+    public async remove(item: string | T): Promise<void> {
         let id = typeof item === 'string' ? item : item._id;
         if (id === undefined) {
             return;
@@ -91,15 +91,19 @@ export class Repository<T extends Entity> {
         }
     }
 
-    async removeAll(items: (string | T)[]): Promise<void> {
+    public async removeAll(items: (string | T)[]): Promise<void> {
         items.forEach(async (i) => {
             await this.remove(i);
         });
     }
 
-    async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.table } }): Promise<T[]> {
+    public async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.table } }): Promise<T[]> {
         const docs = await this.db.find(options);
         return docs.docs as T[];
+    }
+
+    public async clear(): Promise<void> {
+        await this.removeAll(await this.query({ selector: { $table: this.table } }));
     }
 
     public onChange(handler: OnRepositoryChange<T>) {
