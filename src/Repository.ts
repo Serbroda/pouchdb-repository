@@ -58,9 +58,9 @@ export class Repository<T extends Entity> {
 
     public async saveAll(items: T[]): Promise<T[]> {
         let results: T[] = [];
-        items.forEach(async (i) => {
-            results.push(await this.save(i));
-        });
+        for (let item of items) {
+            results.push(await this.save(item));
+        }
         return results;
     }
 
@@ -92,9 +92,9 @@ export class Repository<T extends Entity> {
     }
 
     public async removeAll(items: (string | T)[]): Promise<void> {
-        items.forEach(async (i) => {
-            await this.remove(i);
-        });
+        for (let item of items) {
+            await this.remove(item);
+        }
     }
 
     public async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.table } }): Promise<T[]> {
