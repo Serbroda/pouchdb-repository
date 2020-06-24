@@ -20,6 +20,7 @@ const createEntity = (data?: ITestEntity) => {
 
 beforeEach(async () => {
     await repo.clear();
+    repo.removeAllChangeListener();
 });
 
 it('should save entity', async () => {
@@ -113,4 +114,18 @@ it('should remove all given entities', async () => {
     await repo.removeAll([entity1, entity2, entity3]);
     results = await repo.query();
     expect(results.length).toBe(1);
+});
+
+it('should listen for changes', (done: jest.DoneCallback) => {
+    const callback = (item: any) => {
+        expect(item).not.toBeUndefined();
+        expect(item).not.toBeNull();
+        expect(item.name).toBe('Anna');
+        done();
+    };
+    repo.onChange(callback);
+
+    setTimeout(async () => {
+        await repo.save(createEntity({ name: 'Anna' }));
+    }, 200);
 });
