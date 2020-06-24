@@ -114,6 +114,10 @@ export class Repository<T extends Entity> {
         this.changeListeners = this.changeListeners.filter((h) => h !== handler);
     }
 
+    public removeAllChangeListener() {
+        this.changeListeners = [];
+    }
+
     private _isNew(entity: T): boolean {
         return entity._id === undefined;
     }
