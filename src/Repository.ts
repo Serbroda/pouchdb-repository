@@ -98,6 +98,9 @@ export class Repository<T extends Entity> {
     }
 
     public async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.table } }): Promise<T[]> {
+        if (options.selector && !options.selector.$table) {
+            options.selector = { ...options.selector, ...{ $table: this.table } };
+        }
         const docs = await this.db.find(options);
         return docs.docs as T[];
     }
