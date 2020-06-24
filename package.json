@@ -4,17 +4,21 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "jest --config jestconfig.json --coverage"
   },
   "author": "Danny Rottstegge",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^26.0.0",
     "@types/pouchdb-find": "^6.3.5",
     "@types/pouchdb-node": "^6.1.3",
     "@types/uuid": "^8.0.0",
+    "jest": "^26.1.0",
     "pouchdb-find": "^7.2.1",
     "pouchdb-node": "^7.2.1",
     "prettier": "^2.0.5",
+    "ts-jest": "^26.1.1",
     "typescript": "^3.9.5"
   },
   "dependencies": {
