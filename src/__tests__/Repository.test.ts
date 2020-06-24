@@ -101,7 +101,7 @@ it('should remove entity', async () => {
     expect(results.length).toBe(2);
 });
 
-it('should remove all given entity', async () => {
+it('should remove all given entities', async () => {
     const entity1 = await repo.save(createEntity());
     const entity2 = await repo.save(createEntity());
     const entity3 = await repo.save(createEntity());
