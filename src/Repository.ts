@@ -19,7 +19,7 @@ export class Repository<T extends Entity> {
 
     constructor(
         private readonly name: string,
-        private readonly options: RepositoryOptions = { db: { name: 'db' }, deletedFlag: true }
+        private readonly options: RepositoryOptions = { db: { name: 'db', auto_compaction: true }, deletedFlag: true }
     ) {
         this.db = new PouchDB(options.db.name, options.db);
         this.db
