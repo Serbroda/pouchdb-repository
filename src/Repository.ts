@@ -66,8 +66,8 @@ export class Repository<T extends Entity> {
 
     async get(id: string, options: PouchDB.Core.GetOptions = {}): Promise<T | undefined> {
         try {
-            let result = await this.db.get(id, options);
-            return result;
+            // TODO: Get with table name
+            return await this.db.get(id, options);
         } catch (e) {
             return undefined;
         }
@@ -80,13 +80,13 @@ export class Repository<T extends Entity> {
         }
 
         if (this.options.deletedFlag) {
-            let entity = await this.get(id);
+            const entity = await this.get(id);
             if (entity) {
                 entity._deleted = true;
                 await this.save(entity);
             }
         } else {
-            let doc = await this.db.get(id);
+            const doc = await this.db.get(id);
             await this.db.remove(doc._id, doc._rev);
         }
     }
@@ -98,7 +98,7 @@ export class Repository<T extends Entity> {
     }
 
     async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.table } }): Promise<T[]> {
-        let docs = await this.db.find(options);
+        const docs = await this.db.find(options);
         return docs.docs as T[];
     }
 
@@ -107,7 +107,7 @@ export class Repository<T extends Entity> {
     }
 
     public removeOnChangeListener(handler: OnRepositoryChange<T>) {
-        this.changeListeners.filter((h) => h !== handler);
+        this.changeListeners = this.changeListeners.filter((h) => h !== handler);
     }
 
     private _isNew(entity: T): boolean {
