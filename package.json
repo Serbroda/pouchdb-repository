@@ -4,6 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
+    "clean": "rimraf db/",
+    "pretest": "npm run clean",
+    "posttest": "npm run clean",
     "build": "tsc",
     "test": "jest --config jestconfig.json --coverage"
   },
@@ -18,6 +21,7 @@
     "pouchdb-find": "^7.2.1",
     "pouchdb-node": "^7.2.1",
     "prettier": "^2.0.5",
+    "rimraf": "^3.0.2",
     "ts-jest": "^26.1.1",
     "typescript": "^3.9.5"
   },
