@@ -18,17 +18,16 @@ export class Repository<T extends Entity> {
     private changeListeners: OnRepositoryChange<T>[] = [];
 
     constructor(
-        private readonly table: string,
+        private readonly name: string,
         private readonly options: RepositoryOptions = { db: { name: 'db' }, deletedFlag: true }
     ) {
-        this.table = table;
         this.db = new PouchDB(options.db.name, options.db);
         this.db
             .changes({
                 since: 'now',
                 live: true,
                 filter: (doc) => {
-                    return doc.$table === this.table;
+                    return doc.$table === this.name;
                 },
             })
             .on('change', async (change) => {
@@ -48,7 +47,7 @@ export class Repository<T extends Entity> {
             item.created = now;
         }
         item.lastModified = now;
-        item = { ...item, $table: this.table };
+        item = { ...item, $table: this.name };
 
         const doc = await this.db.put(item);
         item._id = doc.id;
@@ -97,16 +96,16 @@ export class Repository<T extends Entity> {
         }
     }
 
-    public async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.table } }): Promise<T[]> {
+    public async query(options: PouchDB.Find.FindRequest<T> = { selector: { $table: this.name } }): Promise<T[]> {
         if (options.selector && !options.selector.$table) {
-            options.selector = { ...options.selector, ...{ $table: this.table } };
+            options.selector = { ...options.selector, ...{ $table: this.name } };
         }
         const docs = await this.db.find(options);
         return docs.docs as T[];
     }
 
     public async clear(): Promise<void> {
-        await this.removeAll(await this.query({ selector: { $table: this.table } }));
+        await this.removeAll(await this.query({ selector: { $table: this.name } }));
     }
 
     public onChange(handler: OnRepositoryChange<T>) {
