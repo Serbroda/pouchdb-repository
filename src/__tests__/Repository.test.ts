@@ -23,8 +23,6 @@ beforeEach(async () => {
 });
 
 it('should save entity', async () => {
-    repo.clear();
-
     const entity = await repo.save(createEntity());
     expect(entity).not.toBeUndefined();
     expect(entity).not.toBeNull();
