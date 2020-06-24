@@ -89,6 +89,14 @@ it('should remove entity', async () => {
     const entity3 = await repo.save(createEntity({ name: 'Emma' }));
     const entity4 = await repo.save(createEntity({ name: 'Florian' }));
 
-    const results = await repo.query();
+    let results = await repo.query();
     expect(results.length).toBe(4);
+
+    await repo.remove(entity1);
+    results = await repo.query();
+    expect(results.length).toBe(3);
+
+    await repo.remove(entity2._id!);
+    results = await repo.query();
+    expect(results.length).toBe(2);
 });
