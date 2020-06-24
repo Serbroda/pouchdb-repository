@@ -17,6 +17,7 @@ export class Repository<T extends Entity> {
     constructor(
         private readonly name: string,
         private readonly options: RepositoryOptions = {
+            prefix: './db/',
             auto_compaction: true,
         }
     ) {
