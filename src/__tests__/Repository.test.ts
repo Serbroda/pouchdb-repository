@@ -84,10 +84,10 @@ it('should clear repository', async () => {
 });
 
 it('should remove entity', async () => {
-    const entity1 = await repo.save(createEntity({ name: 'Max' }));
-    const entity2 = await repo.save(createEntity({ name: 'Julia' }));
-    const entity3 = await repo.save(createEntity({ name: 'Emma' }));
-    const entity4 = await repo.save(createEntity({ name: 'Florian' }));
+    const entity1 = await repo.save(createEntity());
+    const entity2 = await repo.save(createEntity());
+    const entity3 = await repo.save(createEntity());
+    const entity4 = await repo.save(createEntity());
 
     let results = await repo.query();
     expect(results.length).toBe(4);
@@ -99,4 +99,18 @@ it('should remove entity', async () => {
     await repo.remove(entity2._id!);
     results = await repo.query();
     expect(results.length).toBe(2);
+});
+
+it('should remove all given entity', async () => {
+    const entity1 = await repo.save(createEntity());
+    const entity2 = await repo.save(createEntity());
+    const entity3 = await repo.save(createEntity());
+    const entity4 = await repo.save(createEntity());
+
+    let results = await repo.query();
+    expect(results.length).toBe(4);
+
+    await repo.removeAll([entity1, entity2, entity3]);
+    results = await repo.query();
+    expect(results.length).toBe(1);
 });
