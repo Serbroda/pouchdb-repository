@@ -96,7 +96,7 @@ export class Repository<T extends Entity> {
     }
 
     public onChange(handler: OnRepositoryChange<T>, filter?: OnRepositoryChangeFilter<T>) {
-        const dbChanges = this._listenForDbChangedIfNecessary(handler, filter);
+        const dbChanges = this._createDbChangeListener(handler, filter);
         this.changeListeners.push({
             dbChanges,
             handler,
@@ -121,7 +121,7 @@ export class Repository<T extends Entity> {
         return entity._id === undefined;
     }
 
-    private _listenForDbChangedIfNecessary(
+    private _createDbChangeListener(
         handler: OnRepositoryChange<T>,
         filter?: OnRepositoryChangeFilter<T>
     ): PouchDB.Core.Changes<T> {
