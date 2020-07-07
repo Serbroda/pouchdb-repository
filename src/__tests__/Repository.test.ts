@@ -125,18 +125,123 @@ it('should remove all given entities', async () => {
     expect(results.length).toBe(1);
 });
 
-it('should listen for changes', (done: jest.DoneCallback) => {
-    const callback = (item: any) => {
-        expect(item).not.toBeUndefined();
-        expect(item).not.toBeNull();
-        expect(item.name).toBe('Anna');
-        done();
+it('should listen for adding items', (done: jest.DoneCallback) => {
+    repo.removeAllChangeListener();
+
+    const callback = (type: any, item: any) => {
+        try {
+            expect(type).not.toBeUndefined();
+            expect(type).not.toBeNull();
+            expect(type).toBe('ADDED');
+
+            expect(item).not.toBeUndefined();
+            expect(item).not.toBeNull();
+            expect(item.name).toBe('Anna');
+            done();
+        } catch (error) {
+            done(error);
+        }
     };
     repo.onChange(callback);
 
     setTimeout(async () => {
         await repo.save(createEntity({ name: 'Anna' }));
-    }, 200);
+    }, 50);
+});
+
+it('should listen for deleting items', async (done: jest.DoneCallback) => {
+    repo.removeAllChangeListener();
+
+    const callback = (type: any, item: any) => {
+        try {
+            expect(type).not.toBeUndefined();
+            expect(type).not.toBeNull();
+            expect(type).toBe('DELETED');
+
+            expect(item).not.toBeUndefined();
+            expect(item).not.toBeNull();
+            expect(item.name).toBe('Franzi');
+            done();
+        } catch (error) {
+            done(error);
+        }
+    };
+    const entity = await repo.save(createEntity({ name: 'Franzi' }));
+
+    setTimeout(() => {
+        repo.onChange(callback);
+        setTimeout(async () => {
+            await repo.remove(entity);
+        }, 50);
+    }, 50);
+});
+
+it('should listen for modifying items', async (done: jest.DoneCallback) => {
+    repo.removeAllChangeListener();
+
+    const callback = (type: any, item: any) => {
+        try {
+            expect(type).not.toBeUndefined();
+            expect(type).not.toBeNull();
+            expect(type).toBe('MODIFIED');
+
+            expect(item).not.toBeUndefined();
+            expect(item).not.toBeNull();
+            expect(item.name).toBe('Melany');
+            done();
+        } catch (error) {
+            done(error);
+        }
+    };
+    const entity = await repo.save(createEntity({ name: 'Melanie' }));
+
+    setTimeout(() => {
+        repo.onChange(callback);
+        setTimeout(async () => {
+            entity.name = 'Melany';
+            await repo.save(entity);
+        }, 50);
+    }, 50);
+});
+
+it('should listen only for filtered items', async (done: jest.DoneCallback) => {
+    const callback = jest.fn();
+    repo.onChange(callback, (type, data) => {
+        if (data?.name) {
+            return type == 'MODIFIED' && data.name.startsWith('Jan');
+        }
+        return type == 'MODIFIED';
+    });
+
+    setTimeout(async () => {
+        let entity1 = await repo.save(createEntity({ name: 'Jan', age: 12 }));
+        let entity2 = await repo.save(createEntity({ name: 'Frank', age: 43 }));
+        let entity3 = await repo.save(createEntity({ name: 'Mike', age: 28 }));
+        let entity4 = await repo.save(createEntity({ name: 'Janine', age: 62 }));
+
+        entity1.age = 14;
+        entity1 = await repo.save(entity1);
+        entity2.age = 45;
+        entity2 = await repo.save(entity2);
+        entity3.age = 30;
+        entity3 = await repo.save(entity3);
+        entity4.age = 64;
+        entity4 = await repo.save(entity4);
+
+        await repo.remove(entity1);
+        await repo.remove(entity2);
+        await repo.remove(entity3);
+        await repo.remove(entity4);
+
+        setTimeout(() => {
+            try {
+                expect(callback).toBeCalledTimes(2);
+                done();
+            } catch (err) {
+                done(err);
+            }
+        }, 50);
+    }, 20);
 });
 
 it('should not listen after listener removed', (done: jest.DoneCallback) => {
@@ -147,10 +252,14 @@ it('should not listen after listener removed', (done: jest.DoneCallback) => {
     setTimeout(async () => {
         await repo.save(createEntity());
         setTimeout(() => {
-            expect(callback).not.toHaveBeenCalled();
-            done();
-        }, 500);
-    }, 200);
+            try {
+                expect(callback).not.toHaveBeenCalled();
+                done();
+            } catch (err) {
+                done(err);
+            }
+        }, 50);
+    }, 20);
 });
 
 it('should difference between multiple repositories', async () => {

@@ -8,11 +8,24 @@ import { Entity } from './Entity';
 
 export interface RepositoryOptions extends PouchDB.Configuration.LocalDatabaseConfiguration {}
 
-export type OnRepositoryChange<T> = { (data: T): void };
+export enum RepositoryChangeType {
+    ADDED = 'ADDED',
+    MODIFIED = 'MODIFIED',
+    DELETED = 'DELETED',
+}
+
+export type OnRepositoryChange<T extends Entity> = { (type: RepositoryChangeType, data?: T): void };
+export type OnRepositoryChangeFilter<T extends Entity> = { (type: RepositoryChangeType, data?: T): boolean };
+
+interface RepositoryChangeHandler<T extends Entity> {
+    dbChanges: PouchDB.Core.Changes<T>;
+    handler: OnRepositoryChange<T>;
+    filter?: OnRepositoryChangeFilter<T>;
+}
 
 export class Repository<T extends Entity> {
     private readonly db: PouchDB.Database<T>;
-    private changeListeners: OnRepositoryChange<T>[] = [];
+    private changeListeners: RepositoryChangeHandler<T>[] = [];
 
     constructor(
         private readonly name: string,
@@ -22,19 +35,6 @@ export class Repository<T extends Entity> {
         }
     ) {
         this.db = new PouchDB(options.name || name, options);
-        this.db
-            .changes({
-                since: 'now',
-                live: true,
-            })
-            .on('change', async (change) => {
-                const entity = await this.get(change.id);
-                if (entity) {
-                    this.changeListeners.forEach((listener) => {
-                        listener(entity);
-                    });
-                }
-            });
     }
 
     public async save(item: T): Promise<T> {
@@ -61,7 +61,6 @@ export class Repository<T extends Entity> {
 
     public async get(id: string, options: PouchDB.Core.GetOptions = {}): Promise<T | undefined> {
         try {
-            // TODO: Get with table name
             return await this.db.get(id, options);
         } catch (e) {
             return undefined;
@@ -96,19 +95,59 @@ export class Repository<T extends Entity> {
         await this.removeAll(await this.query());
     }
 
-    public onChange(handler: OnRepositoryChange<T>) {
-        this.changeListeners.push(handler);
+    public onChange(handler: OnRepositoryChange<T>, filter?: OnRepositoryChangeFilter<T>) {
+        const dbChanges = this._listenForDbChangedIfNecessary(handler, filter);
+        this.changeListeners.push({
+            dbChanges,
+            handler,
+            filter,
+        });
     }
 
     public removeOnChangeListener(handler: OnRepositoryChange<T>) {
-        this.changeListeners = this.changeListeners.filter((h) => h !== handler);
+        const index = this.changeListeners.findIndex((h) => h.handler === handler);
+        if (index > -1) {
+            this.changeListeners[index].dbChanges.cancel();
+            this.changeListeners.splice(index, 1);
+        }
     }
 
     public removeAllChangeListener() {
+        this.changeListeners.forEach((cl) => cl.dbChanges.cancel());
         this.changeListeners = [];
     }
 
     private _isNew(entity: T): boolean {
         return entity._id === undefined;
+    }
+
+    private _listenForDbChangedIfNecessary(
+        handler: OnRepositoryChange<T>,
+        filter?: OnRepositoryChangeFilter<T>
+    ): PouchDB.Core.Changes<T> {
+        return this.db
+            .changes({
+                since: 'now',
+                live: true,
+                include_docs: true,
+            })
+            .on('change', (change) => {
+                let changeType: RepositoryChangeType;
+
+                if (change.deleted !== undefined && change.deleted === true) {
+                    changeType = RepositoryChangeType.DELETED;
+                } else if (change.doc?._rev.startsWith('1-')) {
+                    changeType = RepositoryChangeType.ADDED;
+                } else {
+                    changeType = RepositoryChangeType.MODIFIED;
+                }
+                if (filter) {
+                    if (filter(changeType, change.doc)) {
+                        handler(changeType, change.doc);
+                    }
+                } else {
+                    handler(changeType, change.doc);
+                }
+            });
     }
 }
