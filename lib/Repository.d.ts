@@ -3,8 +3,16 @@
 import { Entity } from './Entity';
 export interface RepositoryOptions extends PouchDB.Configuration.LocalDatabaseConfiguration {
 }
-export declare type OnRepositoryChange<T> = {
-    (data: T): void;
+export declare enum RepositoryChangeType {
+    ADDED = "ADDED",
+    MODIFIED = "MODIFIED",
+    DELETED = "DELETED"
+}
+export declare type OnRepositoryChange<T extends Entity> = {
+    (type: RepositoryChangeType, data?: T): void;
+};
+export declare type OnRepositoryChangeFilter<T extends Entity> = {
+    (type: RepositoryChangeType, data?: T): boolean;
 };
 export declare class Repository<T extends Entity> {
     private readonly name;
@@ -19,9 +27,10 @@ export declare class Repository<T extends Entity> {
     removeAll(items: (string | T)[]): Promise<void>;
     query(options?: PouchDB.Find.FindRequest<T>): Promise<T[]>;
     clear(): Promise<void>;
-    onChange(handler: OnRepositoryChange<T>): void;
+    onChange(handler: OnRepositoryChange<T>, filter?: OnRepositoryChangeFilter<T>): void;
     removeOnChangeListener(handler: OnRepositoryChange<T>): void;
     removeAllChangeListener(): void;
     private _isNew;
+    private _createDbChangeListener;
 }
 //# sourceMappingURL=Repository.d.ts.map
